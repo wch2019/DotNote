@@ -18,6 +18,11 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'after']);
 const vditor = ref(null);
 
+const setMode = (mode) => {
+  if (vditor.value) {
+    vditor.value.setMode(mode);
+  }
+};
 onMounted( () => {
   vditor.value = new Vditor(props.id, {
     lang: 'zh_CN',
@@ -73,6 +78,10 @@ onBeforeUnmount(() => {
     vditor.value = null;
   }
 });
+defineExpose({
+  setMode
+});
+
 </script>
 
 <style scoped>
