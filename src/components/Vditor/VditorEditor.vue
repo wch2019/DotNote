@@ -8,26 +8,26 @@ import Vditor from 'vditor';
 import 'vditor/dist/index.css';
 
 const props = defineProps({
-  modelValue: { type: String, default: '' },
-  id: { type: String, default: 'vditor' },
-  placeholder: { type: String, default: '请输入内容...' },
-  height: { type: [Number, String], default: 360},
-  options: { type: Object, default: () => ({}) }
+  modelValue: {type: String, default: ''},
+  id: {type: String, default: 'vditor'},
+  placeholder: {type: String, default: '请输入内容...'},
+  height: {type: [Number, String], default: 360},
+  mode: {type: String, default: 'ir'},
+  options: {type: Object, default: () => ({})}
 });
 
 const emit = defineEmits(['update:modelValue', 'after']);
 const vditor = ref(null);
 
-const setMode = (mode) => {
-  if (vditor.value) {
-    vditor.value.setMode(mode);
-  }
-};
-onMounted( () => {
-  vditor.value = new Vditor(props.id, {
+onMounted(() => {
+  vditor.value = init();
+});
+
+function init() {
+  return new Vditor(props.id, {
     lang: 'zh_CN',
     placeholder: props.placeholder,
-    mode: 'ir',
+    mode: props.mode,
     toolbarConfig: {
       // 是否隐藏工具栏
       hide: false,
@@ -49,9 +49,9 @@ onMounted( () => {
       emit('after', vditor.value);
     },
     ...props.options,
-    cache: { enable: false },
+    cache: {enable: false},
   });
-});
+}
 
 // 监听高度变化：当父组件修改 height 属性时，同步调整编辑器
 watch(() => props.height, (newHeight) => {
@@ -67,6 +67,13 @@ watch(() => props.modelValue, (newValue) => {
     vditor.value.setValue(newValue);
   }
 });
+// 监听模式变化,动态切换编辑模式
+watch(() => props.mode, (newMode) => {
+  if (vditor.value) {
+    vditor.value = init();
+  }
+});
+
 watch(() => props.modelValue, (newVal) => {
   console.log('编辑器收到新数据:', newVal.length, '字');
 })
@@ -77,9 +84,6 @@ onBeforeUnmount(() => {
     vditor.value.destroy?.();
     vditor.value = null;
   }
-});
-defineExpose({
-  setMode
 });
 
 </script>
@@ -95,6 +99,7 @@ defineExpose({
 .vditor {
   border: none;
 }
+
 :deep(.vditor-toolbar) {
   border: none;
 }
@@ -107,6 +112,7 @@ defineExpose({
   //overflow-x: auto !important;
   //overflow-y: hidden !important;
 }
+
 @media (max-width: 1000px) {
 }
 </style>

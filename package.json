@@ -28,6 +28,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "@vicons/fluent": "^0.13.0",
     "@vicons/ionicons5": "^0.13.0",
+    "@vicons/carbon": "^0.13.0",
     "electron-store": "^11.0.2",
     "fs-extra": "^11.3.0",
     "path-browserify": "^1.0.1",

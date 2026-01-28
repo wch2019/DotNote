@@ -5,6 +5,7 @@
         ref="vditorRef"
         v-model="content"
         :height="'calc(100vh - 81px)'"
+        :mode="editorMode"
         @after="handleEditorReady"
     />
     <div class="intro-container" v-else>
@@ -28,22 +29,23 @@
             </n-icon>
           </template>
         </n-button>
-<!--        <n-button quaternary @click="toggleEditorMode" :title="`切换模式: ${currentModeLabel}`">-->
-<!--          <template #icon>-->
-<!--            <n-icon>-->
-<!--              <component :is="modeIcon"/>-->
-<!--            </n-icon>-->
-<!--          </template>-->
-<!--        </n-button>-->
+        <n-button quaternary @click="toggleEditorMode" :title="currentModeLabel">
+          <template #icon>
+            <n-icon>
+              <component :is="modeIcon"/>
+            </n-icon>
+          </template>
+        </n-button>
       </div>
       <div class="footer-right">
         <n-dropdown
-            trigger="hover"
+            trigger="click"
             :options="allStats"
             @select="handleSelect"
         >
-          {{count }}
-
+          <n-button quaternary title="字数统计">
+            {{ getWordCount }}
+          </n-button>
         </n-dropdown>
       </div>
 
@@ -59,6 +61,7 @@ import VditorEditor from "@/components/Vditor/VditorEditor.vue";
 import {useMessage, NCheckbox} from "naive-ui";
 import {CreateOutline, EyeOutline, CodeSlashOutline} from "@vicons/ionicons5";
 import {PanelLeft20Regular, PanelLeftExpand20Regular} from "@vicons/fluent";
+import {MachineLearning} from "@vicons/carbon";
 
 const message = useMessage()
 const noteStore = useNoteStore();
@@ -66,14 +69,15 @@ const themeStore = useThemeStore();
 const vditorRef = ref(null);
 
 const content = ref('')
-watch(() => noteStore.currentContent, (newVal) => {
+watch(() => noteStore.currentContent, () => {
   content.value = noteStore.currentContent
 })
+const editorMode = ref('ir');
 
 const isSidebarCollapsed = computed(() => themeStore.isMiddlePanelCollapsed);
 
-// 默认显示的文本统计项，初始化为 `wordCount`
-const count = ref("");
+// 默认显示的文本统计项
+const count = ref("words");
 
 // 统计字数
 const allStats = computed(() => {
@@ -82,45 +86,45 @@ const allStats = computed(() => {
   const lineCount = content.value.split('\n').length;
   const minutesToRead = Math.ceil(wordCount / 200);
   return [
-    { key: 'minutes', label: `≤ ${minutesToRead} 分钟` },
-    { key: 'lines', label: `${lineCount} 行` },
-    { key: 'words', label: `${wordCount} 词` },
-    { key: 'chars', label: `${charCount} 字符` },
+    {key: 'minutes', label: `≤ ${minutesToRead} 分钟`},
+    {key: 'lines', label: `${lineCount} 行`},
+    {key: 'words', label: `${wordCount} 词`},
+    {key: 'chars', label: `${charCount} 字符`},
   ];
 });
-
+const getWordCount = computed(() => {
+  const selectedStat = allStats.value.find(item => item.key === count.value);
+  if (selectedStat) {
+    return selectedStat.label;
+  }
+});
 
 // 处理dropdown选择事件
 const handleSelect = (key) => {
-  const selectedStat = allStats.value.find(item => item.key === key);
-  if (selectedStat) {
-    count.value = selectedStat.label; // 更新显示内容
-  }
+  count.value = key;
 };
-
 
 
 const editorModes = ['ir', 'wysiwyg', 'sv'];
 const currentModeIndex = ref(0);
 
 const currentModeLabel = computed(() => ({
-  ir: '即时渲染',
-  wysiwyg: '所见即所得',
-  sv: '分屏预览'
+  ir: '即时渲染模式',
+  wysiwyg: '所见即所得模式',
+  sv: '分屏预览模式'
 }[editorModes[currentModeIndex.value]]));
 
 const modeIcon = computed(() => ({
   ir: EyeOutline,
-  wysiwyg: EyeOutline,
+  wysiwyg: MachineLearning,
   sv: CodeSlashOutline
 }[editorModes[currentModeIndex.value]]));
 
 const toggleEditorMode = () => {
   currentModeIndex.value = (currentModeIndex.value + 1) % editorModes.length;
   const newMode = editorModes[currentModeIndex.value];
-  vditorRef.value?.setMode(newMode);
+  editorMode.value = newMode;
 };
-// --- 状态栏增强结束 ---
 
 const toggleSidebar = () => {
   themeStore.toggleMiddlePanel();
@@ -155,7 +159,7 @@ onMounted(() => {
 const handleEditorReady = (instance) => {
   console.log('编辑器就绪', instance);
 };
-count.value = allStats.value.find(stat => stat.key === 'words').label;
+
 // 触发新建笔记
 const handleCreate = async () => {
   await noteStore.newNote();
@@ -178,7 +182,6 @@ const handleCreate = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-right: 10px;
   font-size: 12px;
 }
 
