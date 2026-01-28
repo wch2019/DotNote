@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import {h, onMounted, ref} from 'vue'
 import {useNoteStore} from "@/stores/useNoteStore.ts"
-import {DocumentTextOutline, FolderOutline, RefreshOutline} from "@vicons/ionicons5"
-import {NIcon, NEllipsis, type TreeOption} from 'naive-ui'
+import {Add, DocumentTextOutline, FolderOutline, RefreshOutline} from "@vicons/ionicons5"
+import {NEllipsis, NIcon, type TreeOption} from 'naive-ui'
+import {HandClick} from "@vicons/tabler";
 
 const noteStore = useNoteStore()
 const treeData = ref()
@@ -11,13 +12,17 @@ const expandedKeys = ref<string[]>([]) // 记录展开的文件夹
 
 // 加载树形数据
 const loadTree = async () => {
-  loading.value = true
-  treeData.value = await window.electronAPI.readFileTree(noteStore.currentDir)
-  loading.value = false
+  if(noteStore.currentDir){
+    loading.value = true
+    treeData.value = await window.electronAPI.readFileTree(noteStore.currentDir)
+    loading.value = false
+  }else {
+    treeData.value = []
+  }
 }
 
 // 渲染图标逻辑
-const renderPrefix = ({ option }: { option: TreeOption & { isDirectory?: boolean } }) => {
+const renderPrefix = ({option}: { option: TreeOption & { isDirectory?: boolean } }) => {
   return h(NIcon, {
     color: option.isDirectory ? '#f0b03f' : '#666',
     size: 18
@@ -27,14 +32,14 @@ const renderPrefix = ({ option }: { option: TreeOption & { isDirectory?: boolean
 }
 
 // 使用 n-ellipsis 渲染标签
-const renderLabel = ({ option }: { option: TreeOption }) => {
+const renderLabel = ({option}: { option: TreeOption }) => {
   return h(
       NEllipsis,
       {
         style: "max-width: 150px",
         tooltip: {
           placement: 'right',
-          style: { maxWidth: '400px' }
+          style: {maxWidth: '400px'}
         }
       },
       {
@@ -52,33 +57,79 @@ const handleNodeClick = (keys: string[]) => {
   }
 }
 
+const addMarkdown = () => {
+}
+const openFolder = async () => {
+  const selectedPath = await window.electronAPI.selectPath("directory");
+  if (selectedPath) {
+    noteStore.currentDir = selectedPath
+    await loadTree()
+  }
+}
+
+function getLastDirectoryName(path: string): string {
+  // 先将反斜杠转换为正斜杠（以防跨平台兼容性）
+  const normalizedPath = path.replace(/\\/g, '/');
+
+  // 使用 split 按照路径分隔符分割路径，获取最后一部分
+  const pathParts = normalizedPath.split('/');
+
+  // 返回路径的最后一部分
+  return pathParts[pathParts.length - 1];
+}
+
+
 onMounted(loadTree)
 </script>
 
 <template>
-  <div class="typora-sidebar">
+  <n-layout-content class="typora-sidebar" style="height: calc(100vh - 49px);">
     <div class="sidebar-header">
       <span>文件</span>
       <n-button quaternary circle size="tiny" @click="loadTree">
-        <template #icon><n-icon :component="RefreshOutline" /></template>
+        <template #icon>
+          <n-icon :component="RefreshOutline"/>
+        </template>
       </n-button>
     </div>
-
-    <n-scrollbar class="tree-container">
-      <n-spin :show="loading">
-        <n-tree
-            block-line
-            expand-on-click
-            :data="treeData"
-            :selected-keys="[noteStore.currentFilePath]"
-            v-model:expanded-keys="expandedKeys"
-            :render-prefix="renderPrefix"
-            :render-label="renderLabel"
-            @update:selected-keys="handleNodeClick"
-        />
-      </n-spin>
-    </n-scrollbar>
-  </div>
+    <div class="middle">
+      <n-scrollbar v-if="noteStore.currentDir" class="tree-container">
+        <n-spin :show="loading">
+          <n-tree
+              block-line
+              expand-on-click
+              :data="treeData"
+              :selected-keys="[noteStore.currentFilePath]"
+              v-model:expanded-keys="expandedKeys"
+              :render-prefix="renderPrefix"
+              :render-label="renderLabel"
+              @update:selected-keys="handleNodeClick"
+          />
+        </n-spin>
+      </n-scrollbar>
+      <n-button v-else @click="openFolder" text title="选择文件夹">
+        <div class="flex flex-col items-center">
+          <n-icon size="48" :component="FolderOutline"/>
+          <n-icon size="18" :component="HandClick"/>
+        </div>
+      </n-button>
+    </div>
+    <n-layout-footer bordered class="footer">
+      <div class="footer-left">
+        <n-button v-if="noteStore.currentDir" quaternary @click="addMarkdown" title="新建文件">
+          <template #icon>
+            <n-icon :component="Add"/>
+          </template>
+        </n-button>
+      </div>
+      <div class="footer-right">
+        <n-button quaternary @click="openFolder" style=" width: 100%;" :title="noteStore.currentDir">{{
+            getLastDirectoryName(noteStore.currentDir)
+          }}
+        </n-button>
+      </div>
+    </n-layout-footer>
+  </n-layout-content>
 </template>
 
 <style scoped>
@@ -105,6 +156,13 @@ onMounted(loadTree)
   padding: 0 4px;
 }
 
+.middle {
+  height: calc(100% - 76px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 :deep(.n-tree-node) {
   height: 30px;
 }
@@ -116,5 +174,23 @@ onMounted(loadTree)
 
 :deep(.n-tree-node--selected .n-ellipsis) {
   font-weight: 500;
+}
+
+.footer {
+  height: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+}
+
+.footer-right {
+  width: 100%;
+  flex: 1;
 }
 </style>

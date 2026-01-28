@@ -3,7 +3,7 @@ import {defineStore} from "pinia";
 export const useNoteStore = defineStore('notes', {
     state: () => ({
         // 当前笔记目录
-        currentDir: "C:\\Users\\13721\\Documents\\笔记",
+        currentDir: '',
         // 当前选中的笔记文件路径
         currentFilePath: '',
         // 编辑器ID

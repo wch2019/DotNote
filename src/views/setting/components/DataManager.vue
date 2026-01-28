@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import FilePicker from "@/components/FilePicker.vue";
+import FilePicker from "@/components/File/FilePicker.vue";
 defineProps<{ config: any }>();
 defineEmits(['export', 'clear']);
 </script>

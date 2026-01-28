@@ -19,7 +19,7 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/notes/index.vue'),
         meta: {
             title: '全部笔记',
-            icon: 'DocumentTextOutline',
+            icon: 'Writing',
             showInMenu: true,
             showMiddlePanel: true,
             middlePanelComponent: 'NoteListPanel',

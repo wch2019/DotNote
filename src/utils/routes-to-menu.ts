@@ -15,6 +15,7 @@ import {
     SearchOutline,
     TrashOutline
 } from '@vicons/ionicons5'
+import {Writing} from "@vicons/tabler";
 
 /**
  * 图标映射表
@@ -26,7 +27,8 @@ const iconMap: Record<string, any> = {
     FileTrayOutline,
     DocumentTextOutline,
     SearchOutline,
-    TrashOutline
+    TrashOutline,
+    Writing
 }
 
 /**

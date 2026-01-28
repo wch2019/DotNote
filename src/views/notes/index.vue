@@ -9,12 +9,11 @@
         @after="handleEditorReady"
     />
     <div class="intro-container" v-else>
-      <n-result status="404" title="记录灵感" description="从中间列表选择一篇笔记开始编辑，或点击上方新建按钮">
+      <n-result status="404" title="记录灵感" description="从中间列表选择一篇笔记开始编辑">
         <template #icon>
-          <n-icon size="64" :component="CreateOutline"/>
-        </template>
-        <template #footer>
-          <n-button @click="handleCreate">立即新建笔记</n-button>
+          <n-icon size="144">
+            <NoteIcon />
+          </n-icon>
         </template>
       </n-result>
     </div>
@@ -54,14 +53,15 @@
 </template>
 
 <script setup>
-import {h, ref, onMounted, watch, computed} from 'vue';
+import {computed, onMounted, ref, watch} from 'vue';
 import {useNoteStore} from '@/stores/useNoteStore';
 import {useThemeStore} from '@/stores/theme';
 import VditorEditor from "@/components/Vditor/VditorEditor.vue";
-import {useMessage, NCheckbox} from "naive-ui";
-import {CreateOutline, EyeOutline, CodeSlashOutline} from "@vicons/ionicons5";
+import {useMessage} from "naive-ui";
+import {CodeSlashOutline, CreateOutline, EyeOutline} from "@vicons/ionicons5";
 import {PanelLeft20Regular, PanelLeftExpand20Regular} from "@vicons/fluent";
 import {MachineLearning} from "@vicons/carbon";
+import NoteIcon from "@/assets/svg/note.svg?component";
 
 const message = useMessage()
 const noteStore = useNoteStore();
@@ -122,8 +122,7 @@ const modeIcon = computed(() => ({
 
 const toggleEditorMode = () => {
   currentModeIndex.value = (currentModeIndex.value + 1) % editorModes.length;
-  const newMode = editorModes[currentModeIndex.value];
-  editorMode.value = newMode;
+  editorMode.value = editorModes[currentModeIndex.value];
 };
 
 const toggleSidebar = () => {
