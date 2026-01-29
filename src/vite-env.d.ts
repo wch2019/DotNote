@@ -40,6 +40,12 @@ declare global {
             readNotesList: (dataDir: string) => Promise<string[]>
             readFile: (filePath: string) => Promise<string>
             saveFile: (filePath: string, content: string) => Promise<{ success: boolean, error?: any }>
+            createItem: (parentPath: string, name: string, isDirectory: boolean) => Promise<string>
+            renameItem: (oldPath: string, newName: string) => Promise<string>
+            deleteItem: (targetPath: string) => Promise<boolean>
+            showInFolder: (targetPath: string) => Promise<void>
+            getItemProperties: (filePath: string) => Promise<any>
+            getDirname: (filePath: string) => Promise<string>
         }
 
         $message: {

@@ -4,19 +4,33 @@ import {useNoteStore} from "@/stores/useNoteStore.ts"
 import {Add, DocumentTextOutline, FolderOutline, RefreshOutline} from "@vicons/ionicons5"
 import {NEllipsis, NIcon, type TreeOption} from 'naive-ui'
 import {HandClick} from "@vicons/tabler";
+import NoteContextMenu from './NoteContextMenu.vue'
 
 const noteStore = useNoteStore()
 const treeData = ref()
 const loading = ref(false)
-const expandedKeys = ref<string[]>([]) // 记录展开的文件夹
+const expandedKeys = ref<string[]>([])
+const contextMenuRef = ref<InstanceType<typeof NoteContextMenu> | null>(null)
+
+// --- 右键菜单 ---
+const handleContextMenu = (e: MouseEvent, node: TreeOption) => {
+  contextMenuRef.value?.show(e, node)
+}
+
+const nodeProps = ({option}: { option: TreeOption }) => {
+  return {
+    onContextmenu: (e: MouseEvent) => handleContextMenu(e, option)
+  }
+}
+// --- 右键菜单结束 ---
 
 // 加载树形数据
 const loadTree = async () => {
-  if(noteStore.currentDir){
+  if (noteStore.currentDir) {
     loading.value = true
     treeData.value = await window.electronAPI.readFileTree(noteStore.currentDir)
     loading.value = false
-  }else {
+  } else {
     treeData.value = []
   }
 }
@@ -103,6 +117,7 @@ onMounted(loadTree)
               v-model:expanded-keys="expandedKeys"
               :render-prefix="renderPrefix"
               :render-label="renderLabel"
+              :node-props="nodeProps"
               @update:selected-keys="handleNodeClick"
           />
         </n-spin>
@@ -129,6 +144,9 @@ onMounted(loadTree)
         </n-button>
       </div>
     </n-layout-footer>
+
+    <NoteContextMenu ref="contextMenuRef" @action-completed="loadTree"/>
+
   </n-layout-content>
 </template>
 

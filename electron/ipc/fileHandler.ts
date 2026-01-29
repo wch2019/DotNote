@@ -46,6 +46,7 @@ export function registerFileHandler() {
                             }
                         })
                 );
+
                 // 过滤空值并排序（文件夹优先）
                 return nodes
                     .filter((node): node is TreeNode => node !== null)
@@ -132,4 +133,29 @@ export function registerFileHandler() {
     ipcMain.handle('show-in-folder', async (_, targetPath: string) => {
         shell.showItemInFolder(targetPath)
     })
+
+    // 获取文件/文件夹属性
+    ipcMain.handle('get-item-properties', async (_, filePath: string) => {
+        try {
+            const stats = await fs.stat(filePath);
+            const parsedPath = path.parse(filePath);
+            return {
+                name: parsedPath.base,
+                location: parsedPath.dir,
+                size: stats.size,
+                createdAt: stats.birthtime,
+                modifiedAt: stats.mtime,
+                isDirectory: stats.isDirectory(),
+                ext: parsedPath.ext,
+            };
+        } catch (error) {
+            console.error(`获取属性失败: ${filePath}`, error);
+            return null;
+        }
+    });
+
+    // 获取父目录路径
+    ipcMain.handle('get-dirname', async (_, filePath: string) => {
+        return path.dirname(filePath);
+    });
 }

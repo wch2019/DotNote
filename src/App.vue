@@ -65,34 +65,34 @@
           </div>
         </div>
       </n-layout-header>
-      <n-layout has-sider style="height: calc(100vh - 49px);">
-        <!-- 最左侧：图标菜单栏 -->
-        <n-layout-sider width="60" bordered collapse-mode="width" :collapsed="false" :collapsed-width="60">
-          <AppMenu/>
-        </n-layout-sider>
-        <!-- 中间：列表占位区域 -->
-        <n-layout-sider
-            width="240"
-            :collapsed-width="0"
-            :collapsed="middlePanelCollapsed"
-            collapse-mode="width"
-            bordered
-        >
-          <n-message-provider placement="top-right" :container-style="{ top: '60px' }">
-            <component :is="middlePanelComponent"/>
-          </n-message-provider>
-        </n-layout-sider>
-        <!-- 最右侧：内容区域 -->
-        <n-layout-content>
-          <n-dialog-provider>
+      <n-dialog-provider>
+        <n-layout has-sider style="height: calc(100vh - 49px);">
+          <!-- 最左侧：图标菜单栏 -->
+          <n-layout-sider width="60" bordered collapse-mode="width" :collapsed="false" :collapsed-width="60">
+            <AppMenu/>
+          </n-layout-sider>
+          <!-- 中间：列表占位区域 -->
+          <n-layout-sider
+              width="240"
+              :collapsed-width="0"
+              :collapsed="middlePanelCollapsed"
+              collapse-mode="width"
+              bordered
+          >
+            <n-message-provider placement="top-right" :container-style="{ top: '60px' }">
+              <component :is="middlePanelComponent"/>
+            </n-message-provider>
+          </n-layout-sider>
+          <!-- 最右侧：内容区域 -->
+          <n-layout-content>
             <n-notification-provider>
               <n-message-provider placement="top-right" :container-style="{ top: '60px' }">
                 <router-view/>
               </n-message-provider>
             </n-notification-provider>
-          </n-dialog-provider>
-        </n-layout-content>
-      </n-layout>
+          </n-layout-content>
+        </n-layout>
+      </n-dialog-provider>
     </n-layout>
   </n-config-provider>
 </template>

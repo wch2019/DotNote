@@ -44,4 +44,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     readNotesList: (dataDir: string) => ipcRenderer.invoke('read-notes-list', dataDir),
     readFile: (filePath: string) => ipcRenderer.invoke('read-file', filePath),
     saveFile: (filePath: string, content: string) => ipcRenderer.invoke('save-file', filePath, content),
+    createItem: (parentPath: string, name: string, isDirectory: boolean) => ipcRenderer.invoke('create-item', parentPath, name, isDirectory),
+    renameItem: (oldPath: string, newName: string) => ipcRenderer.invoke('rename-item', oldPath, newName),
+    deleteItem: (targetPath: string) => ipcRenderer.invoke('delete-item', targetPath),
+    showInFolder: (targetPath: string) => ipcRenderer.invoke('show-in-folder', targetPath),
+    getItemProperties: (filePath: string) => ipcRenderer.invoke('get-item-properties', filePath),
+    getDirname: (filePath: string) => ipcRenderer.invoke('get-dirname', filePath),
+
 })
