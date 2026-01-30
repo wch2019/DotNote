@@ -18,6 +18,9 @@
       negative-text="取消"
       @positive-click="handleRename"
   >
+    <template #icon>
+      <n-icon :component="CreateOutline" />
+    </template>
     <n-input v-model:value="newName" placeholder="请输入新名称" @keyup.enter="handleRename"/>
   </n-modal>
 
@@ -29,6 +32,9 @@
       negative-text="取消"
       @positive-click="handleCreateItem"
   >
+    <template #icon>
+      <n-icon :component="newItemType === 'file' ? DocumentTextOutline : FolderOutline" />
+    </template>
     <n-input v-model:value="newItemName" placeholder="请输入名称" @keyup.enter="handleCreateItem"/>
   </n-modal>
 
@@ -50,13 +56,13 @@
 
       <n-descriptions label-placement="left" :column="1" bordered>
         <n-descriptions-item label="文件类型">{{ fileType }}</n-descriptions-item>
-        <n-descriptions-item label="文件位置">{{ location }}</n-descriptions-item>
+        <n-descriptions-item label="位置">{{ location }}</n-descriptions-item>
       </n-descriptions>
 
       <n-divider style="margin: 16px 0;" />
 
       <n-descriptions label-placement="left" :column="1" bordered>
-        <n-descriptions-item label="文件大小">{{ formattedSize }}</n-descriptions-item>
+        <n-descriptions-item label="大小">{{ formattedSize }}</n-descriptions-item>
       </n-descriptions>
 
       <n-divider style="margin: 16px 0;" />
@@ -71,12 +77,12 @@
 </template>
 
 <script setup lang="ts">
-import {ref, nextTick, computed} from 'vue'
+import {ref, nextTick, computed, h} from 'vue'
 import {
   NDropdown, NModal, NInput, useDialog, type TreeOption,
   NDescriptions, NDescriptionsItem, NDivider, NIcon
 } from 'naive-ui'
-import { DocumentTextOutline, FolderOutline } from '@vicons/ionicons5'
+import { DocumentTextOutline, FolderOutline, CreateOutline, TrashOutline } from '@vicons/ionicons5'
 
 const dialog = useDialog()
 const emit = defineEmits(['action-completed'])
@@ -86,6 +92,7 @@ const x = ref(0)
 const y = ref(0)
 const selectedNode = ref<TreeOption | null>(null)
 
+// --- 弹窗状态 ---
 const showRenameModal = ref(false)
 const newName = ref('')
 
@@ -97,12 +104,14 @@ const showPropertiesModal = ref(false)
 const properties = ref<any>(null)
 const location = ref('')
 
+
+// --- 菜单与属性计算 ---
 const dropdownOptions = computed(() => [
-  {label: '新建文件', key: 'new-file'},
-  {label: '新建文件夹', key: 'new-folder'},
+  {label: '新建文件', key: 'new-file', icon: () => h(NIcon, { component: DocumentTextOutline })},
+  {label: '新建文件夹', key: 'new-folder', icon: () => h(NIcon, { component: FolderOutline })},
   {type: 'divider', key: 'd1'},
-  {label: '重命名', key: 'rename'},
-  {label: '删除', key: 'delete'},
+  {label: '重命名', key: 'rename', icon: () => h(NIcon, { component: CreateOutline })},
+  {label: '删除', key: 'delete', icon: () => h(NIcon, { component: TrashOutline })},
   {type: 'divider', key: 'd2'},
   {label: '在文件管理器中显示', key: 'showInFolder'},
   {label: '属性', key: 'properties'}
@@ -121,7 +130,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
 }
 const formattedSize = computed(() => properties.value ? formatBytes(properties.value.size) : '0 Bytes')
 
-
+// --- 方法 ---
 const show = (event: MouseEvent, node: TreeOption) => {
   event.preventDefault()
   showDropdown.value = false
@@ -158,6 +167,7 @@ const handleDropdownSelect = async (key: string) => {
         content: `确定要将 "${selectedNode.value.label}" 移入回收站吗？`,
         positiveText: '确定',
         negativeText: '取消',
+        icon: () => h(NIcon, { component: TrashOutline }),
         onPositiveClick: async () => {
           await window.electronAPI.deleteItem(selectedNode.value.key as string)
           emit('action-completed')

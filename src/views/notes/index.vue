@@ -159,10 +159,6 @@ const handleEditorReady = (instance) => {
   console.log('编辑器就绪', instance);
 };
 
-// 触发新建笔记
-const handleCreate = async () => {
-  await noteStore.newNote();
-};
 </script>
 <style scoped>
 .intro-container {
