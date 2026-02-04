@@ -118,8 +118,6 @@ import {getMiddlePanelComponent} from '@/components/middle-panel'
 
 // 初始化主题
 const themeStore = useThemeStore()
-themeStore.initThemeFromConfig()
-
 const router = useRouter()
 const route = useRoute()
 

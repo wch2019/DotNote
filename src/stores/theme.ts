@@ -1,12 +1,19 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { useOsTheme, darkTheme } from 'naive-ui'
+import { useConfigStore } from './config'
 
 export const useThemeStore = defineStore('theme', () => {
     const osTheme = useOsTheme()
+    const configStore = useConfigStore()
 
-    // 用户配置：'light' | 'dark' | 'auto'
-    const userTheme = ref<'light' | 'dark' | 'auto'>('auto')
+    // 从 configStore 初始化主题，并建立响应式链接
+    const userTheme = ref<'light' | 'dark' | 'auto'>(configStore.theme)
+    watch(() => configStore.theme, (newTheme) => {
+        if (userTheme.value !== newTheme) {
+            userTheme.value = newTheme
+        }
+    })
 
     // 侧边栏折叠状态
     const isMiddlePanelCollapsed = ref(false)
@@ -20,23 +27,15 @@ export const useThemeStore = defineStore('theme', () => {
     // naive-ui 的主题
     const naiveTheme = computed(() => (isDark.value ? darkTheme : null))
 
-    // 设置主题并同步保存（写配置）
+    // 设置主题并同步保存到 configStore
     async function setTheme(value: 'light' | 'dark' | 'auto') {
-        userTheme.value = value
-        const config = await window.electronAPI.readConfig()
-        config.theme = value
-        await window.electronAPI.writeConfig(config)
+        // 更新 configStore，它会负责持久化并触发状态更新
+        await configStore.saveConfig({ ...configStore.$state, theme: value })
     }
 
     // 切换侧边栏折叠状态
     function toggleMiddlePanel() {
         isMiddlePanelCollapsed.value = !isMiddlePanelCollapsed.value
-    }
-
-    // 启动时从配置文件初始化
-    async function initThemeFromConfig() {
-        const config = await window.electronAPI.readConfig()
-        userTheme.value = config.theme || 'auto'
     }
 
     // 更新 DOM 类（适配 Tailwind / 自定义样式）
@@ -51,6 +50,5 @@ export const useThemeStore = defineStore('theme', () => {
         isMiddlePanelCollapsed,
         setTheme,
         toggleMiddlePanel,
-        initThemeFromConfig,
     }
 })

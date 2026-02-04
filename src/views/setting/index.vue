@@ -8,11 +8,11 @@
       <div class="settings-content">
         <n-tabs v-model:value="activeTab" type="line" animated placement="left">
           <n-tab-pane name="system" tab="常规设置">
-            <General :config="systemConfig" @theme-change="onThemeChange"/>
+            <General :config="configStore.$state" @theme-change="onThemeChange"/>
           </n-tab-pane>
           <n-tab-pane name="data" tab="数据管理">
             <DataManager
-                :config="systemConfig"
+                :config="configStore.$state"
                 @export="exportData"
                 @clear="clearData"
             />
@@ -35,10 +35,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref, toRaw} from 'vue'
-import {type AppConfig, defaultConfig} from '../../types/defaultConfig.ts'
+import {computed, onMounted, ref} from 'vue'
+import { defaultConfig } from '../../types/defaultConfig.ts'
 import {useDialog, useMessage} from 'naive-ui'
 import {useThemeStore} from '@/stores/theme'
+import { useConfigStore } from '@/stores/config'
 import General from "@/views/setting/components/General.vue";
 import DataManager from "@/views/setting/components/DataManager.vue";
 import About from "@/views/setting/components/About.vue";
@@ -49,8 +50,7 @@ const activeTab = ref('system')
 const themeStore = useThemeStore()
 const dialog = useDialog()
 const message = useMessage()
-// 系统配置
-const systemConfig = ref<AppConfig>({...defaultConfig});
+const configStore = useConfigStore();
 // 记录原始数据目录，用于对比是否发生变化
 const originDataDir = ref<string>()
 
@@ -86,11 +86,11 @@ function resetSettings() {
     positiveText: '重置',
     negativeText: '取消',
     draggable: true,
-    onPositiveClick: () => {
-      const config = defaultConfig
+    onPositiveClick: async () => {
+      const config = { ...defaultConfig }
       config.dataDir = originDataDir.value || ''
-      window.electronAPI.writeConfig(toRaw(config))
-      init()
+      await configStore.saveConfig(config)
+      await configStore.loadConfig()
       message.success('重置成功')
     },
     onNegativeClick: () => {
@@ -106,19 +106,19 @@ function onThemeChange(theme: any) {
 // 保存设置
 async function saveSettings() {
   try {
-    await window.electronAPI.writeConfig(toRaw(systemConfig.value))
-    if (systemConfig.value.dataDir !== originDataDir.value) {
+    await configStore.saveConfig(configStore.$state)
+    if (configStore.dataDir !== originDataDir.value) {
       dialog.warning({
         title: '警告',
         content: '数据存储目录修改是否迁移目录',
         positiveText: '迁移',
         negativeText: '不迁移',
         draggable: true,
-        onPositiveClick: () => {
+        onPositiveClick: async () => {
           if (originDataDir.value) {
-            window.electronAPI.migrateDataDir(originDataDir.value, systemConfig.value.dataDir)
+            await window.electronAPI.migrateDataDir(originDataDir.value, configStore.dataDir)
           }
-          init()
+          await init()
           message.success('设置成功')
         },
         onNegativeClick: () => {
@@ -139,9 +139,9 @@ async function init() {
   const path = window.electronAPI.getConfigPath()
   console.log('配置文件路径:', path)
 
-  systemConfig.value = await window.electronAPI.readConfig()
-  originDataDir.value = systemConfig.value.dataDir
-  console.log('配置读取:', systemConfig)
+  await configStore.loadConfig()
+  originDataDir.value = configStore.dataDir
+  console.log('配置读取:', configStore.$state)
 }
 
 onMounted(async () => {

@@ -76,13 +76,13 @@ const addMarkdown = () => {
 const openFolder = async () => {
   const selectedPath = await window.electronAPI.selectPath("directory");
   if (selectedPath) {
-    noteStore.currentDir = selectedPath
+    await noteStore.setCurrentDir(selectedPath)
     await loadTree()
   }
 }
 
 function getLastDirectoryName(path: string): string {
-  // 先将反斜杠转换为正斜杠（以防跨平台兼容性）
+  if (!path) return ''
   const normalizedPath = path.replace(/\\/g, '/');
 
   // 使用 split 按照路径分隔符分割路径，获取最后一部分
@@ -93,7 +93,10 @@ function getLastDirectoryName(path: string): string {
 }
 
 
-onMounted(loadTree)
+onMounted(async () => {
+  await noteStore.initCurrentDir()
+  await loadTree()
+})
 </script>
 
 <template>

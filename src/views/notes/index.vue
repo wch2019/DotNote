@@ -1,7 +1,7 @@
 <template>
   <n-layout-content ref="contentRef" style="height: calc(100vh - 49px);">
     <VditorEditor
-        v-if="content"
+        v-if="currentFilePath"
         ref="vditorRef"
         v-model="content"
         :height="'calc(100vh - 81px)'"
@@ -69,8 +69,10 @@ const themeStore = useThemeStore();
 const vditorRef = ref(null);
 
 const content = ref('')
+const currentFilePath = ref('')
 watch(() => noteStore.currentContent, () => {
   content.value = noteStore.currentContent
+  currentFilePath.value = noteStore.currentFilePath
 })
 const editorMode = ref('ir');
 
@@ -82,7 +84,7 @@ const count = ref("words");
 // 统计字数
 const allStats = computed(() => {
   const charCount = content.value.length;
-  const wordCount = (content.value.match(/[\w\u4e00-\u9fa5]+/g) || []).length;
+  const wordCount = (content.value.match(/[A-Za-z0-9_]+|[\u4e00-\u9fa5]/g) || []).length;
   const lineCount = content.value.split('\n').length;
   const minutesToRead = Math.ceil(wordCount / 200);
   return [
@@ -129,17 +131,11 @@ const toggleSidebar = () => {
   themeStore.toggleMiddlePanel();
 };
 
-// 自动保存逻辑（防抖）
-let saveTimer = null;
+// 自动保存逻辑
 watch(content, (newVal) => {
-  // 更新 Store 里的内容，确保状态同步
-  noteStore.currentContent = newVal;
-  // 防抖处理：停止输入 1000ms 后保存
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    console.log("自动保存")
-    await noteStore.saveCurrentNote()
-  }, 1000);
+  if (noteStore.currentFilePath) { // 确保有选中的文件
+    noteStore.startAutoSave(newVal);
+  }
 });
 
 // 监听快捷键 Ctrl+S / Command+S
